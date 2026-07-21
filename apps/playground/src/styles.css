@@ -1,0 +1,30 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.4;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #f0f6ff, #ffffff);
+}
+
+main {
+  max-width: 860px;
+  margin: 2rem auto;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(18, 38, 63, 0.12);
+}
+
+h1 {
+  margin-top: 0;
+}
+
+pre {
+  background: #f6f8fa;
+  border-radius: 8px;
+  padding: 1rem;
+  overflow-x: auto;
+}
