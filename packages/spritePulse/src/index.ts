@@ -70,8 +70,8 @@ export class Camera implements Rect {
 
 
 export class Sprite implements Rect {
-  public readonly x: number;
-  public readonly y: number;
+  public x: number;
+  public y: number;
   public readonly width: number;
   public readonly height: number;
   public readonly shaderRef: string;
@@ -89,6 +89,11 @@ export class Sprite implements Rect {
     this.height = height;
     this.shaderRef = shaderRef;
   }
+
+  public setPosition(x: number, y: number): void {
+    this.x = x;
+    this.y = y;
+  }
 }
 
 export class SpritePulse {
@@ -104,6 +109,7 @@ export class SpritePulse {
   private renderTarget: RenderTarget | null;
   private cameraMatrixLocation : WebGLUniformLocation | null = null;
   private projectionMatrixLocation : WebGLUniformLocation | null = null;
+  private isDisposed = false;
 
   constructor(canvas: HTMLCanvasElement, imageFiles: string[]) {
     this.canvas = canvas;
@@ -156,6 +162,10 @@ export class SpritePulse {
 
 
   public render(sprites: Sprite[], options: RenderOptions = {}): void {
+    if (this.isDisposed) {
+      return;
+    }
+
     const clearColor = options.clearColor ?? [0, 0, 0, 0];
     const useOffscreenBuffer = options.useOffscreenBuffer ?? false;
 
@@ -283,6 +293,12 @@ export class SpritePulse {
   }
 
   public dispose(): void {
+    if (this.isDisposed) {
+      return;
+    }
+
+    this.isDisposed = true;
+
     for (const entry of this.shaderCache.values()) {
       this.gl.deleteTexture(entry.texture);
     }

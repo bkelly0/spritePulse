@@ -28,3 +28,7 @@ pre {
   padding: 1rem;
   overflow-x: auto;
 }
+
+canvas {
+  background: #000;
+}
