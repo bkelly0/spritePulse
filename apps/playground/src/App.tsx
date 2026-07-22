@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Sprite, SpritePulse } from "spritePulse";
+import { Sprite, SpritePulse } from "sprite-pulse";
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);

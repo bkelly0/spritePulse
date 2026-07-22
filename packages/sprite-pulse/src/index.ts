@@ -96,6 +96,29 @@ export class Sprite implements Rect {
   }
 }
 
+export class SpriteSheet {
+  public readonly shaderRef: string;
+  public readonly bounds: Rect[];
+  public animations: Animation[] = [];
+
+  constructor(shaderRef: string, bounds: Rect[]) {
+    this.shaderRef = shaderRef;
+    this.bounds = bounds;
+  }
+}
+
+export class Animation {
+  public readonly name: string;
+  public readonly frames: number[][];
+  public loop: boolean = true;
+
+  // Frame sequence arrays are [frameIndex, duration in number of frames]]
+  constructor(name: string, frames: number[][]) {
+    this.name = name;
+    this.frames = frames;
+  }
+}
+
 export class SpritePulse {
   public readonly canvas: HTMLCanvasElement;
   public readonly gl: WebGL2RenderingContext;

@@ -7,8 +7,8 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build -w spritePulse",
-    "dev": "npm run dev -w spritePulse",
+    "build": "npm run build -w sprite-pulse",
+    "dev": "npm run dev -w sprite-pulse",
     "playground": "npm run dev -w playground",
     "build:all": "npm run build -ws"
   }

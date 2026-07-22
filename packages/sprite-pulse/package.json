@@ -1,7 +1,7 @@
 {
-  "name": "spritePulse",
+  "name": "sprite-pulse",
   "version": "0.1.0",
-  "description": "Tiny TypeScript utility library for sprite pulse animations.",
+  "description": "TypeScript utility library for sprite rendering and animations.",
   "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
