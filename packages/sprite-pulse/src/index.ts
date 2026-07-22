@@ -75,20 +75,28 @@ export class Sprite implements Rect {
   public readonly width: number;
   public readonly height: number;
   public readonly shaderRef: string;
-
+  public readonly spriteSheet: SpriteSheet | null = null;
+  
   constructor(
     x: number,
     y: number,
     width: number,
     height: number,
-    shaderRef: string
+    shaderRefOrSpriteSheet: string | SpriteSheet
   ) {
     this.x = x;
     this.y = y;
     this.width = width;
     this.height = height;
-    this.shaderRef = shaderRef;
+    
+    if (typeof shaderRefOrSpriteSheet === 'string') {
+      this.shaderRef = shaderRefOrSpriteSheet;
+    } else {
+      this.shaderRef = shaderRefOrSpriteSheet.shaderRef;
+      (this as any).spriteSheet = shaderRefOrSpriteSheet;
+    }
   }
+
 
   public setPosition(x: number, y: number): void {
     this.x = x;
@@ -101,9 +109,18 @@ export class SpriteSheet {
   public readonly bounds: Rect[];
   public animations: Animation[] = [];
 
-  constructor(shaderRef: string, bounds: Rect[]) {
+  constructor(shaderRef: string, bounds: Rect[], animations: Animation[] = []) {
     this.shaderRef = shaderRef;
     this.bounds = bounds;
+    this.animations = animations;
+    if (this.animations.length === 0) {
+      const frames: number[][] = [];
+      for (let i = 0; i < this.bounds.length; i++) {
+        frames.push([i, 1]);
+      }
+      const defaultAnimation = new Animation("default", frames);
+      this.animations.push(defaultAnimation);
+    }
   }
 }
 
@@ -111,11 +128,22 @@ export class Animation {
   public readonly name: string;
   public readonly frames: number[][];
   public loop: boolean = true;
+  private frameIndex: number = 0;
+  private frameCount: number = 0;
 
   // Frame sequence arrays are [frameIndex, duration in number of frames]]
   constructor(name: string, frames: number[][]) {
     this.name = name;
     this.frames = frames;
+  }
+
+  public advanceFrame(): void {
+    const [frameIndex, duration] = this.frames[this.frameIndex];
+    this.frameCount++;
+    if (this.frameCount > duration) {
+      this.frameCount = 0;
+      this.frameIndex = (this.frameIndex + 1) % this.frames.length;
+    }
   }
 }
 
