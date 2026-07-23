@@ -6,7 +6,11 @@ export default function App() {
   const spritePulseRef = useRef<SpritePulse | null>(null);
   const [status, setStatus] = useState("Initializing...");
   const [cachedKeys, setCachedKeys] = useState<string[]>([]);
+  const [intensity, setIntensity] = useState(.5);
+  const intensityRef = useRef(intensity)
   const spritesRef = useRef<VelocitySprite[]>([]);
+  const [numSprites, setNumSprites] = useState(0);
+  const numSpritesRef = useRef(0);
 
 
   class VelocitySprite extends Sprite {
@@ -20,6 +24,11 @@ export default function App() {
     }
   }
 
+  //update intensityRef outside of the render loop
+  useEffect(() => {
+    intensityRef.current = intensity;
+  }, [intensity]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) {
@@ -28,6 +37,7 @@ export default function App() {
 
     let isDisposed = false;
     let frameId: number | null = null;
+    intensityRef.current = intensity;
 
     const spritePulse = new SpritePulse(canvas, [
       "/images/particle1.png",
@@ -45,6 +55,7 @@ export default function App() {
         let ssRects = [new Rect(0,0,170,150), new Rect(170,0,170,150), new Rect(340,0,170,150),  new Rect(510,0,170,150)];
         let spriteSheet = new SpriteSheet("spriteSheet.png", ssRects);
         let animatedSprite = new VelocitySprite(20,20,150,180, spriteSheet, 0, 0);
+        let uiUpdateFrameCount = 0;
         spritesRef.current.push(animatedSprite);
 
         //create a 60fps game loop here
@@ -54,7 +65,7 @@ export default function App() {
           }
 
           try {
-            for (let i=0; i<10; i++) {
+            for (let i=0; i<40*intensityRef.current; i++) {
                 let texture = "particle1.png"
                 if (Math.random() < 0.5) {
                     texture = "particle2.png";
@@ -62,6 +73,11 @@ export default function App() {
                 let scale = .5 + Math.random();
                 let vs = new VelocitySprite(canvas.width / 2, canvas.height / 2, 15*scale, 15*scale, texture, getRandomRange(-5.5, 5.5), getRandomRange(-8.5, 5.5));
                 spritesRef.current.push(vs);
+            }
+            numSpritesRef.current = spritesRef.current.length;
+            uiUpdateFrameCount++;
+            if (uiUpdateFrameCount % 60 === 0) {
+              setNumSprites(numSpritesRef.current);
             }
 
             //update sprite positions based on velocity
@@ -126,6 +142,18 @@ export default function App() {
       <h1>spritePulse Playground</h1>
       <p>{status}</p>
       <canvas ref={canvasRef} width={800} height={600} />
+      <div>{numSprites}</div>
+      <label>
+        Intensity
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={intensity}
+          onChange={(event) => setIntensity(Number(event.target.value))}
+        />
+      </label>
       <pre>{JSON.stringify(cachedKeys, null, 2)}</pre>
     </main>
   );
