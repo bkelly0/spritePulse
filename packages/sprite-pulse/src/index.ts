@@ -89,6 +89,10 @@ export class Sprite extends Rect {
     this.x = x;
     this.y = y;
   }
+
+  public get currentAnimationRect(): Rect | null {
+    return this.spriteSheet?.currentAnimationRect ?? null;
+  }
 }
 
 export class SpriteSheet {
@@ -111,8 +115,11 @@ export class SpriteSheet {
     }
   }
 
-  getCurrentAnimationRect(): Rect {
-    return this.bounds[this.animations[this.animationIndex].getCurrentFrameSpriteSheetIndex()];
+  public get currentAnimationRect(): Rect {
+    const animation = this.animations[this.animationIndex];
+    const rect = this.bounds[animation.getCurrentFrameSpriteSheetIndex()];
+    animation.nextFrame();
+    return rect;
   }
 }
 
@@ -120,7 +127,7 @@ export class Animation {
   public readonly name: string;
   public readonly frames: number[][];
   public loop: boolean = true;
-  public readonly frameIndex: number = 0;
+  private frameIndex: number = 0;
   private frameCount: number = 0;
 
   // Frame sequence arrays are [frameIndex, duration in number of frames]]
@@ -136,6 +143,10 @@ export class Animation {
       this.frameCount = 0;
       this.frameIndex = (this.frameIndex + 1) % this.frames.length;
     }
+  }
+
+  public nextFrame(): void {
+    this.advanceFrame();
   }
 
   public getCurrentFrameSpriteSheetIndex(): number {
@@ -154,6 +165,7 @@ export class SpritePulse {
   private readonly quadBuffer: WebGLBuffer;
   private readonly spriteProgram: WebGLProgram;
   private readonly spriteTextureUniformLocation: WebGLUniformLocation;
+  private readonly spriteUvRectUniformLocation: WebGLUniformLocation;
   private renderTarget: RenderTarget | null;
   private cameraMatrixLocation : WebGLUniformLocation | null = null;
   private projectionMatrixLocation : WebGLUniformLocation | null = null;
@@ -176,11 +188,21 @@ export class SpritePulse {
       this.spriteProgram,
       "u_texture"
     ) as WebGLUniformLocation;
+    this.spriteUvRectUniformLocation = gl.getUniformLocation(
+      this.spriteProgram,
+      "u_uvRect"
+    ) as WebGLUniformLocation;
     if (!this.spriteTextureUniformLocation) {
       gl.deleteProgram(sharedShader.program);
       gl.deleteShader(sharedShader.vertexShader);
       gl.deleteShader(sharedShader.fragmentShader);
       throw new Error("Missing u_texture uniform in shared sprite shader.");
+    }
+    if (!this.spriteUvRectUniformLocation) {
+      gl.deleteProgram(sharedShader.program);
+      gl.deleteShader(sharedShader.vertexShader);
+      gl.deleteShader(sharedShader.fragmentShader);
+      throw new Error("Missing u_uvRect uniform in shared sprite shader.");
     }
     gl.deleteShader(sharedShader.vertexShader);
     gl.deleteShader(sharedShader.fragmentShader);
@@ -292,6 +314,14 @@ export class SpritePulse {
 
       this.gl.viewport(viewportX, viewportY, viewportWidth, viewportHeight);
       this.gl.bindTexture(this.gl.TEXTURE_2D, entry.texture);
+      const uvRect = resolveSpriteUvRect(sprite, entry.width, entry.height);
+      this.gl.uniform4f(
+        this.spriteUvRectUniformLocation,
+        uvRect.x,
+        uvRect.y,
+        uvRect.width,
+        uvRect.height
+      );
       this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
     }
 
@@ -313,6 +343,7 @@ export class SpritePulse {
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.uniform1i(this.spriteTextureUniformLocation, 0);
+    this.gl.uniform4f(this.spriteUvRectUniformLocation, 0, 0, 1, 1);
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
     this.gl.bindTexture(this.gl.TEXTURE_2D, null);
     this.gl.bindVertexArray(null);
@@ -501,10 +532,12 @@ precision mediump float;
 
 in vec2 v_texCoord;
 uniform sampler2D u_texture;
+uniform vec4 u_uvRect;
 out vec4 outColor;
 
 void main() {
-  outColor = texture(u_texture, v_texCoord);
+  vec2 sampleUv = u_uvRect.xy + (v_texCoord * u_uvRect.zw);
+  outColor = texture(u_texture, sampleUv);
 }`;
 
   const vertexShader = compileShader(gl, gl.VERTEX_SHADER, vertexSource);
@@ -623,4 +656,33 @@ function createRenderTarget(
   }
 
   return { framebuffer, texture, width, height };
+}
+
+function resolveSpriteUvRect(
+  sprite: Sprite,
+  textureWidth: number,
+  textureHeight: number
+): Rect {
+  const animationRect = sprite.currentAnimationRect;
+  if (!animationRect) {
+    return new Rect(0, 0, 1, 1);
+  }
+
+  const safeTextureWidth = Math.max(1, textureWidth);
+  const safeTextureHeight = Math.max(1, textureHeight);
+  const normalizedX = clamp(animationRect.x / safeTextureWidth, 0, 1);
+  const normalizedY = clamp(animationRect.y / safeTextureHeight, 0, 1);
+  const normalizedWidth = clamp(animationRect.width / safeTextureWidth, 0, 1 - normalizedX);
+  const normalizedHeight = clamp(animationRect.height / safeTextureHeight, 0, 1 - normalizedY);
+
+  return new Rect(
+    normalizedX,
+    normalizedY,
+    normalizedWidth,
+    normalizedHeight
+  );
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
