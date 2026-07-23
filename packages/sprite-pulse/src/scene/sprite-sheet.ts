@@ -7,14 +7,19 @@ export class SpriteSheet {
   public animations: Animation[] = [];
   private animationIndex: number = 0;
 
-  constructor(shaderRef: string, bounds: Rect[], animations: Animation[] = []) {
+  constructor(
+    shaderRef: string,
+    bounds: Rect[],
+    animations: Animation[] = [],
+    defaultFrameDuration: number = 1
+  ) {
     this.shaderRef = shaderRef;
     this.bounds = bounds;
     this.animations = animations;
     if (this.animations.length === 0) {
       const frames: number[][] = [];
       for (let i = 0; i < this.bounds.length; i++) {
-        frames.push([i, 1]);
+        frames.push([i, defaultFrameDuration]);
       }
       const defaultAnimation = new Animation("default", frames);
       this.animations.push(defaultAnimation);

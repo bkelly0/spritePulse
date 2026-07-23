@@ -42,7 +42,7 @@ export default function App() {
     const spritePulse = new SpritePulse(canvas, [
       "/images/particle1.png",
       "/images/particle2.png",
-      "/images/spriteSheet.png"
+      "/images/spriteSheetSmaller.png"
     ]);
     spritePulseRef.current = spritePulse;
 
@@ -52,9 +52,9 @@ export default function App() {
         const keys = Array.from(spritePulse.shaderCache.keys());
         setCachedKeys(keys);
 
-        let ssRects = [new Rect(0,0,170,150), new Rect(170,0,170,150), new Rect(340,0,170,150),  new Rect(510,0,170,150)];
-        let spriteSheet = new SpriteSheet("spriteSheet.png", ssRects);
-        let animatedSprite = new VelocitySprite(20,20,150,180, spriteSheet, 0, 0);
+        let ssRects = [new Rect(0,0,90,75), new Rect(90,0,90,75), new Rect(180,0,90,75),  new Rect(270,0,90,75)];
+        let spriteSheet = new SpriteSheet("spriteSheetSmaller.png", ssRects, [], 4);
+        let animatedSprite = new VelocitySprite(20,20,90,75, spriteSheet, 0, 0);
         let uiUpdateFrameCount = 0;
         spritesRef.current.push(animatedSprite);
 
@@ -101,6 +101,7 @@ export default function App() {
             }
           }
         };
+        setStatus("Running...");
         frameId = requestAnimationFrame(loop);
 
       })
@@ -125,24 +126,12 @@ export default function App() {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  const renderSprite = (filename: string) => {
-    const spritePulse = spritePulseRef.current;
-    if (!spritePulse) {
-      return;
-    }
-
-    spritePulse.render([
-      new Sprite(0, 0, spritePulse.canvas.width, spritePulse.canvas.height, filename)
-    ]);
-    setStatus(`Rendered ${filename}.`);
-  };
-
   return (
     <main>
-      <h1>spritePulse Playground</h1>
+      <h1>SpritePulse Demo: Particles</h1>
       <p>{status}</p>
       <canvas ref={canvasRef} width={800} height={600} />
-      <div>{numSprites}</div>
+      <div>Number of Sprites:{numSprites}</div>
       <label>
         Intensity
         <input
