@@ -11,11 +11,13 @@ export type RenderOptions = {
   clearColor?: [number, number, number, number];
 };
 
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+export class Rect {
+  constructor(
+    public x: number,
+    public y: number,
+    public readonly width: number,
+    public readonly height: number
+  ) {}
 }
 
 export class Matrix3 {
@@ -48,20 +50,12 @@ export class Matrix3 {
 }
 
 
-export class Camera implements Rect {
-    public readonly width: number;
-    public readonly height: number;
-    public readonly x: number;
-    public readonly y: number;
+export class Camera extends Rect {
+  constructor(width: number, height: number) {
+    super(0, 0, width, height);
+  }
 
-    constructor(width: number, height: number) {
-        this.width = width;
-        this.height = height;
-        this.x = 0;
-        this.y = 0;
-    }
-
-      // Returns the view matrix. Moving the camera RIGHT moves the world LEFT.
+  // Returns the view matrix. Moving the camera RIGHT moves the world LEFT.
   public getViewMatrix(): Float32Array {
     // Invert the coordinates to simulate camera movement
     return Matrix3.translation(-this.x, -this.y);
@@ -69,11 +63,7 @@ export class Camera implements Rect {
 }
 
 
-export class Sprite implements Rect {
-  public x: number;
-  public y: number;
-  public readonly width: number;
-  public readonly height: number;
+export class Sprite extends Rect {
   public readonly shaderRef: string;
   public readonly spriteSheet: SpriteSheet | null = null;
   
@@ -84,10 +74,7 @@ export class Sprite implements Rect {
     height: number,
     shaderRefOrSpriteSheet: string | SpriteSheet
   ) {
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
+    super(x, y, width, height);
     
     if (typeof shaderRefOrSpriteSheet === 'string') {
       this.shaderRef = shaderRefOrSpriteSheet;
@@ -108,6 +95,7 @@ export class SpriteSheet {
   public readonly shaderRef: string;
   public readonly bounds: Rect[];
   public animations: Animation[] = [];
+  private animationIndex: number = 0;
 
   constructor(shaderRef: string, bounds: Rect[], animations: Animation[] = []) {
     this.shaderRef = shaderRef;
@@ -122,13 +110,17 @@ export class SpriteSheet {
       this.animations.push(defaultAnimation);
     }
   }
+
+  getCurrentAnimationRect(): Rect {
+    return this.bounds[this.animations[this.animationIndex].getCurrentFrameSpriteSheetIndex()];
+  }
 }
 
 export class Animation {
   public readonly name: string;
   public readonly frames: number[][];
   public loop: boolean = true;
-  private frameIndex: number = 0;
+  public readonly frameIndex: number = 0;
   private frameCount: number = 0;
 
   // Frame sequence arrays are [frameIndex, duration in number of frames]]
@@ -145,6 +137,11 @@ export class Animation {
       this.frameIndex = (this.frameIndex + 1) % this.frames.length;
     }
   }
+
+  public getCurrentFrameSpriteSheetIndex(): number {
+    return this.frames[this.frameIndex][0];
+  }
+
 }
 
 export class SpritePulse {

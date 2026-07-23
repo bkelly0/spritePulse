@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Sprite, SpritePulse } from "sprite-pulse";
+import { Rect, Sprite, SpritePulse, SpriteSheet } from "sprite-pulse";
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -13,8 +13,8 @@ export default function App() {
     vx: number;
     vy: number;
 
-    constructor(x: number, y: number, width: number, height: number, shaderRef: string, vx: number, vy: number) {
-      super(x, y, width, height, shaderRef);
+    constructor(x: number, y: number, width: number, height: number, shaderRefOrSpriteSheet: string | SpriteSheet, vx: number, vy: number) {
+      super(x, y, width, height, shaderRefOrSpriteSheet);
       this.vx = vx;
       this.vy = vy;
     }
@@ -31,7 +31,8 @@ export default function App() {
 
     const spritePulse = new SpritePulse(canvas, [
       "/images/particle1.png",
-      "/images/particle2.png"
+      "/images/particle2.png",
+      "/images/spriteSheet.png"
     ]);
     spritePulseRef.current = spritePulse;
 
@@ -40,6 +41,11 @@ export default function App() {
       .then(() => {
         const keys = Array.from(spritePulse.shaderCache.keys());
         setCachedKeys(keys);
+
+        let ssRects = [new Rect(0,0,170,150), new Rect(170,0,170,150), new Rect(340,0,170,150),  new Rect(510,0,170,150)];
+        let spriteSheet = new SpriteSheet("spriteSheet.png", ssRects);
+        let animatedSprite = new VelocitySprite(20,20,150,180, spriteSheet, 0, 0);
+        spritesRef.current.push(animatedSprite);
 
         //create a 60fps game loop here
         const loop = () => {
