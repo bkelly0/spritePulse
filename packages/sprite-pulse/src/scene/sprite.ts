@@ -1,18 +1,26 @@
 import { Rect } from "../geometry";
 import type { SpriteSheet } from "./sprite-sheet";
 
+export type SpriteFlipAxis = 1 | -1;
+
 export class Sprite extends Rect {
   public readonly shaderRef: string;
   public readonly spriteSheet: SpriteSheet | null = null;
+  public flipX: SpriteFlipAxis;
+  public flipY: SpriteFlipAxis;
 
   constructor(
     x: number,
     y: number,
     width: number,
     height: number,
-    shaderRefOrSpriteSheet: string | SpriteSheet
+    shaderRefOrSpriteSheet: string | SpriteSheet,
+    flipX: SpriteFlipAxis = 1,
+    flipY: SpriteFlipAxis = 1
   ) {
     super(x, y, width, height);
+    this.flipX = flipX;
+    this.flipY = flipY;
 
     if (typeof shaderRefOrSpriteSheet === "string") {
       this.shaderRef = shaderRefOrSpriteSheet;
