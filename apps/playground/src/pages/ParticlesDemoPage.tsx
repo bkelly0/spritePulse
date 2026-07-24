@@ -31,7 +31,6 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
   const [cachedKeys, setCachedKeys] = useState<string[]>([]);
   const [intensity, setIntensity] = useState(0.5);
   const intensityRef = useRef(intensity);
-  const spritesRef = useRef<VelocitySprite[]>([]);
   const [numSprites, setNumSprites] = useState(0);
   const numSpritesRef = useRef(0);
 
@@ -48,6 +47,7 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
     let isDisposed = false;
     let frameId: number | null = null;
     let uiUpdateFrameCount = 0;
+    let sprites: VelocitySprite[] = [];
 
     const spritePulse = new SpritePulse(canvas, [
       "/images/particle1.png",
@@ -83,16 +83,16 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
                 getRandomRange(-5.5, 5.5),
                 getRandomRange(-8.5, 5.5)
               );
-              spritesRef.current.push(vs);
+              sprites.push(vs);
             }
 
-            numSpritesRef.current = spritesRef.current.length;
+            numSpritesRef.current = sprites.length;
             uiUpdateFrameCount += 1;
             if (uiUpdateFrameCount % 60 === 0) {
               setNumSprites(numSpritesRef.current);
             }
 
-            for (const sprite of spritesRef.current) {
+            for (const sprite of sprites) {
               sprite.vy += 0.1;
               sprite.x += sprite.vx;
               sprite.y += sprite.vy;
@@ -101,10 +101,8 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
               }
             }
 
-            spritesRef.current = spritesRef.current.filter(
-              (sprite) => sprite.y <= canvas.height
-            );
-            spritePulse.render(spritesRef.current);
+            sprites = sprites.filter((sprite) => sprite.y <= canvas.height);
+            spritePulse.render(sprites);
           } catch (error: unknown) {
             const message =
               error instanceof Error ? error.message : "Unexpected render error.";
@@ -136,7 +134,7 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
       }
       spritePulse.dispose();
       spritePulseRef.current = null;
-      spritesRef.current = [];
+      sprites = [];
     };
   }, []);
 

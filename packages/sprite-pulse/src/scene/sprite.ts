@@ -1,4 +1,5 @@
 import { Rect } from "../geometry";
+import type { AnimationFrameState } from "./animation";
 import type { SpriteSheet } from "./sprite-sheet";
 
 export type SpriteFlipAxis = 1 | -1;
@@ -8,6 +9,10 @@ export class Sprite extends Rect {
   public readonly spriteSheet: SpriteSheet | null = null;
   public flipX: SpriteFlipAxis;
   public flipY: SpriteFlipAxis;
+  private readonly animationState: AnimationFrameState = {
+    frameIndex: 0,
+    frameCount: 0
+  };
 
   constructor(
     x: number,
@@ -36,6 +41,6 @@ export class Sprite extends Rect {
   }
 
   public get currentAnimationRect(): Rect | null {
-    return this.spriteSheet?.currentAnimationRect ?? null;
+    return this.spriteSheet?.getCurrentAnimationRect(this.animationState) ?? null;
   }
 }

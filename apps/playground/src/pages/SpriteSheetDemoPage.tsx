@@ -15,7 +15,6 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
   const spritePulseRef = useRef<SpritePulse | null>(null);
   const [status, setStatus] = useState("Initializing...");
   const [cachedKeys, setCachedKeys] = useState<string[]>([]);
-  const spritesRef = useRef<MovingSprite[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,8 +24,9 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
 
     let isDisposed = false;
     let frameId: number | null = null;
+    let sprites: MovingSprite[] = [];
 
-    const spritePulse = new SpritePulse(canvas, ["/images/spriteSheetSmaller.png"]);
+    const spritePulse = new SpritePulse(canvas, ["/images/spriteSheetSmaller.png", "/images/tile1.png"]);
     spritePulseRef.current = spritePulse;
 
     void spritePulse
@@ -39,6 +39,13 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
         const keys = Array.from(spritePulse.shaderCache.keys());
         setCachedKeys(keys);
 
+        
+        for (let x = 0; x < canvas.width; x += 100) {
+          for (let y = 0; y< canvas.height; y += 100) {
+            sprites.push({ sprite: new Sprite(x, y, 100, 100, "tile1.png"), dirX: 1 });
+          }
+        }
+
         const ssRects = [
           new Rect(0, 0, 90, 75),
           new Rect(90, 0, 90, 75),
@@ -48,12 +55,16 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
         const spriteSheet = new SpriteSheet("spriteSheetSmaller.png", ssRects, [], 6);
 
         const rowHeight = 75;
+        let rowCount = 0;
         for (let y = 0; y < canvas.height; y += rowHeight) {
-          const dirX = spritesRef.current.length % 2 === 0 ? 1 : -1;
-          const startX = dirX === 1 ? 0 : canvas.width + 90;
-          const flipX: SpriteFlipAxis = dirX === 1 ? 1 : -1;
-          const sprite = new Sprite(startX, y, 90, 75, spriteSheet, flipX, 1);
-          spritesRef.current.push({ sprite, dirX });
+            const dirX = sprites.length % 2 === 0 ? 1 : -1;
+            rowCount++;
+          for (let x = 0; x< canvas.width - 75; x+=100) {
+            const startX = x;
+            const flipX: SpriteFlipAxis = rowCount%2==0 ? 1 : -1;
+            const sprite = new Sprite(startX, y, 90, 75, spriteSheet, flipX, 1);
+            sprites.push({ sprite, dirX });
+          }
         }
 
         const loop = () => {
@@ -62,19 +73,20 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
           }
 
           try {
-            for (const moving of spritesRef.current) {
-              moving.sprite.x += 3 * moving.dirX;
-              if (
-                (moving.dirX < 0 && moving.sprite.x < -moving.sprite.width) ||
-                (moving.dirX > 0 &&
-                  moving.sprite.x > canvas.width + moving.sprite.width)
-              ) {
-                moving.dirX *= -1;
-                moving.sprite.flipX = moving.dirX === 1 ? 1 : -1;
+            for (const moving of sprites) {
+              if (moving.sprite.width == 100) {
+                continue;
+              }
+              moving.sprite.x += 3 * moving.sprite.flipX;
+              
+              if  ( moving.sprite.flipX < 0 && moving.sprite.x < -moving.sprite.width) {
+                moving.sprite.x = canvas.width + moving.sprite.width;
+              } else if  ( moving.sprite.flipX > 0 && moving.sprite.x > canvas.width + moving.sprite.width) {
+                moving.sprite.x = -moving.sprite.width;
               }
             }
 
-            spritePulse.render(spritesRef.current.map((moving) => moving.sprite));
+            spritePulse.render(sprites.map((moving) => moving.sprite));
           } catch (error: unknown) {
             const message =
               error instanceof Error ? error.message : "Unexpected render error.";
@@ -106,7 +118,7 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
       }
       spritePulse.dispose();
       spritePulseRef.current = null;
-      spritesRef.current = [];
+      sprites = [];
     };
   }, []);
 

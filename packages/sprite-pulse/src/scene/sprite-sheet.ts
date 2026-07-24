@@ -1,11 +1,15 @@
 import { Rect } from "../geometry";
-import { Animation } from "./animation";
+import { Animation, type AnimationFrameState } from "./animation";
 
 export class SpriteSheet {
   public readonly shaderRef: string;
   public readonly bounds: Rect[];
   public animations: Animation[] = [];
   private animationIndex: number = 0;
+  private readonly fallbackFrameState: AnimationFrameState = {
+    frameIndex: 0,
+    frameCount: 0
+  };
 
   constructor(
     shaderRef: string,
@@ -27,9 +31,13 @@ export class SpriteSheet {
   }
 
   public get currentAnimationRect(): Rect {
+    return this.getCurrentAnimationRect(this.fallbackFrameState);
+  }
+
+  public getCurrentAnimationRect(state: AnimationFrameState): Rect {
     const animation = this.animations[this.animationIndex];
-    const rect = this.bounds[animation.getCurrentFrameSpriteSheetIndex()];
-    animation.nextFrame();
+    const rect = this.bounds[animation.getCurrentFrameSpriteSheetIndex(state)];
+    animation.nextFrame(state);
     return rect;
   }
 }

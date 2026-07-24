@@ -1,9 +1,12 @@
+export type AnimationFrameState = {
+  frameIndex: number;
+  frameCount: number;
+};
+
 export class Animation {
   public readonly name: string;
   public readonly frames: number[][];
   public loop: boolean = true;
-  private frameIndex: number = 0;
-  private frameCount: number = 0;
 
   // Frame sequence arrays are [frameIndex, duration in number of frames]
   constructor(name: string, frames: number[][]) {
@@ -11,20 +14,20 @@ export class Animation {
     this.frames = frames;
   }
 
-  public advanceFrame(): void {
-    const [, duration] = this.frames[this.frameIndex];
-    this.frameCount++;
-    if (this.frameCount > duration) {
-      this.frameCount = 0;
-      this.frameIndex = (this.frameIndex + 1) % this.frames.length;
+  public advanceFrame(state: AnimationFrameState): void {
+    const [, duration] = this.frames[state.frameIndex];
+    state.frameCount++;
+    if (state.frameCount > duration) {
+      state.frameCount = 0;
+      state.frameIndex = (state.frameIndex + 1) % this.frames.length;
     }
   }
 
-  public nextFrame(): void {
-    this.advanceFrame();
+  public nextFrame(state: AnimationFrameState): void {
+    this.advanceFrame(state);
   }
 
-  public getCurrentFrameSpriteSheetIndex(): number {
-    return this.frames[this.frameIndex][0];
+  public getCurrentFrameSpriteSheetIndex(state: AnimationFrameState): number {
+    return this.frames[state.frameIndex][0];
   }
 }
