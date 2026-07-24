@@ -87,10 +87,17 @@ export class SpritePulse {
     return this.shaderCache.get(filename);
   }
 
-  public render(sprites: Sprite[], options: RenderOptions = {}): void {
+  public render(sprites: Sprite[], options?: RenderOptions): void;
+  public render(layers: Sprite[][], options?: RenderOptions): void;
+  public render(
+    spritesOrLayers: Sprite[] | Sprite[][],
+    options: RenderOptions = {}
+  ): void {
     if (this.isDisposed) {
       return;
     }
+
+    const sprites = this.flattenRenderInput(spritesOrLayers);
 
     const clearColor = options.clearColor ?? [0, 0, 0, 0];
     const useOffscreenBuffer = options.useOffscreenBuffer ?? false;
@@ -145,6 +152,23 @@ export class SpritePulse {
 
   public renderSprite(sprite: Sprite): void {
     this.render([sprite]);
+  }
+
+  private flattenRenderInput(spritesOrLayers: Sprite[] | Sprite[][]): Sprite[] {
+    if (spritesOrLayers.length === 0) {
+      return [];
+    }
+
+    if (Array.isArray(spritesOrLayers[0])) {
+      const layers = spritesOrLayers as Sprite[][];
+      const flattened: Sprite[] = [];
+      for (const layer of layers) {
+        flattened.push(...layer);
+      }
+      return flattened;
+    }
+
+    return spritesOrLayers as Sprite[];
   }
 
   private drawSpritesToCurrentBuffer(sprites: Sprite[], targetHeight: number): void {

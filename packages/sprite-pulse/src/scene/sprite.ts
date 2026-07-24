@@ -1,5 +1,5 @@
 import { Rect } from "../geometry";
-import type { AnimationFrameState } from "./animation";
+import type { AnimationFrameState } from "./sprite-animation";
 import type { SpriteSheet } from "./sprite-sheet";
 
 export type SpriteFlipAxis = 1 | -1;
@@ -11,7 +11,8 @@ export class Sprite extends Rect {
   public flipY: SpriteFlipAxis;
   private readonly animationState: AnimationFrameState = {
     frameIndex: 0,
-    frameCount: 0
+    frameCount: 0,
+    playbackDirection: 1
   };
 
   constructor(

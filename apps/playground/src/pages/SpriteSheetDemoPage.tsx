@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Rect, Sprite, SpritePulse, SpriteSheet, type SpriteFlipAxis } from "sprite-pulse";
+import { Rect, Sprite, SpritePulse, SpriteSheet, type SpriteFlipAxis, SpriteAnimation } from "sprite-pulse";
 
 type DemoPageProps = {
   title: string;
-};
-
-type MovingSprite = {
-  sprite: Sprite;
-  dirX: number;
 };
 
 export function SpriteSheetDemoPage({ title }: DemoPageProps) {
@@ -24,7 +19,8 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
 
     let isDisposed = false;
     let frameId: number | null = null;
-    let sprites: MovingSprite[] = [];
+    let tileLayer: Sprite[] = [];
+    let spriteLayer: Sprite[] = [];
 
     const spritePulse = new SpritePulse(canvas, ["/images/spriteSheetSmaller.png", "/images/tile1.png"]);
     spritePulseRef.current = spritePulse;
@@ -39,10 +35,9 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
         const keys = Array.from(spritePulse.shaderCache.keys());
         setCachedKeys(keys);
 
-        
         for (let x = 0; x < canvas.width; x += 100) {
-          for (let y = 0; y< canvas.height; y += 100) {
-            sprites.push({ sprite: new Sprite(x, y, 100, 100, "tile1.png"), dirX: 1 });
+          for (let y = 0; y < canvas.height; y += 100) {
+            tileLayer.push(new Sprite(x, y, 100, 100, "tile1.png"));
           }
         }
 
@@ -52,18 +47,18 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
           new Rect(180, 0, 90, 75),
           new Rect(270, 0, 90, 75)
         ];
-        const spriteSheet = new SpriteSheet("spriteSheetSmaller.png", ssRects, [], 6);
+        const animation = new SpriteAnimation("default", [[1, 6], [2, 6], [3, 6], [2,6],[1,6]]);
+        const spriteSheet = new SpriteSheet("spriteSheetSmaller.png", ssRects, [animation], 6);
 
         const rowHeight = 75;
         let rowCount = 0;
         for (let y = 0; y < canvas.height; y += rowHeight) {
-            const dirX = sprites.length % 2 === 0 ? 1 : -1;
-            rowCount++;
-          for (let x = 0; x< canvas.width - 75; x+=100) {
+          rowCount++;
+          for (let x = 0; x < canvas.width - 75; x += 200) {
             const startX = x;
-            const flipX: SpriteFlipAxis = rowCount%2==0 ? 1 : -1;
+            const flipX: SpriteFlipAxis = rowCount % 2 === 0 ? 1 : -1;
             const sprite = new Sprite(startX, y, 90, 75, spriteSheet, flipX, 1);
-            sprites.push({ sprite, dirX });
+            spriteLayer.push(sprite);
           }
         }
 
@@ -73,20 +68,20 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
           }
 
           try {
-            for (const moving of sprites) {
-              if (moving.sprite.width == 100) {
-                continue;
-              }
-              moving.sprite.x += 3 * moving.sprite.flipX;
-              
-              if  ( moving.sprite.flipX < 0 && moving.sprite.x < -moving.sprite.width) {
-                moving.sprite.x = canvas.width + moving.sprite.width;
-              } else if  ( moving.sprite.flipX > 0 && moving.sprite.x > canvas.width + moving.sprite.width) {
-                moving.sprite.x = -moving.sprite.width;
+            for (const sprite of spriteLayer) {
+              sprite.x += 3 * sprite.flipX;
+
+              if (sprite.flipX < 0 && sprite.x < -sprite.width) {
+                sprite.x = canvas.width + sprite.width;
+              } else if (
+                sprite.flipX > 0 &&
+                sprite.x > canvas.width + sprite.width
+              ) {
+                sprite.x = -sprite.width;
               }
             }
 
-            spritePulse.render(sprites.map((moving) => moving.sprite));
+            spritePulse.render([tileLayer, spriteLayer]);
           } catch (error: unknown) {
             const message =
               error instanceof Error ? error.message : "Unexpected render error.";
@@ -118,7 +113,8 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
       }
       spritePulse.dispose();
       spritePulseRef.current = null;
-      sprites = [];
+      tileLayer = [];
+      spriteLayer = [];
     };
   }, []);
 
