@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Rect, Sprite, SpritePulse, SpriteSheet, type SpriteFlipAxis, SpriteAnimation } from "sprite-pulse";
+import {
+  Rect,
+  Sprite,
+  SpriteAnimation,
+  SpritePulse,
+  SpriteSheetBundle,
+  type SpriteFlipAxis
+} from "sprite-pulse";
 
 type DemoPageProps = {
   title: string;
@@ -22,7 +29,11 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
     let tileLayer: Sprite[] = [];
     let spriteLayer: Sprite[] = [];
 
-    const spritePulse = new SpritePulse(canvas, ["/images/spriteSheetSmaller.png", "/images/tile1.png"]);
+    const sceneBundle = new SpriteSheetBundle("sprite-sheet-demo", [
+      "/images/spriteSheetSmaller.png",
+      "/images/tile1.png"
+    ]);
+    const spritePulse = new SpritePulse(canvas, [sceneBundle]);
     spritePulseRef.current = spritePulse;
 
     void spritePulse
@@ -35,9 +46,13 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
         const keys = Array.from(spritePulse.shaderCache.keys());
         setCachedKeys(keys);
 
+        const tileSheet = sceneBundle.createSingleFrameSpriteSheet(
+          "/images/tile1.png"
+        );
+
         for (let x = 0; x < canvas.width; x += 100) {
           for (let y = 0; y < canvas.height; y += 100) {
-            tileLayer.push(new Sprite(x, y, 100, 100, "tile1.png"));
+            tileLayer.push(new Sprite(x, y, 100, 100, tileSheet));
           }
         }
 
@@ -47,8 +62,19 @@ export function SpriteSheetDemoPage({ title }: DemoPageProps) {
           new Rect(180, 0, 90, 75),
           new Rect(270, 0, 90, 75)
         ];
-        const animation = new SpriteAnimation("default", [[1, 6], [2, 6], [3, 6], [2,6],[1,6]]);
-        const spriteSheet = new SpriteSheet("spriteSheetSmaller.png", ssRects, [animation], 6);
+        const animation = new SpriteAnimation("default", [
+          [1, 6],
+          [2, 6],
+          [3, 6],
+          [2, 6],
+          [1, 6]
+        ]);
+        const spriteSheet = sceneBundle.createSpriteSheet(
+          "/images/spriteSheetSmaller.png",
+          ssRects,
+          [animation],
+          6
+        );
 
         const rowHeight = 75;
         let rowCount = 0;

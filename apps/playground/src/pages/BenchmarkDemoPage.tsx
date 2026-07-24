@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Sprite, SpritePulse } from "sprite-pulse";
+import {
+  Sprite,
+  SpritePulse,
+  SpriteSheet,
+  SpriteSheetBundle
+} from "sprite-pulse";
 
 type DemoPageProps = {
   title: string;
@@ -72,11 +77,16 @@ const SCENARIOS: BenchmarkScenario[] = [
   }
 ];
 
-const TEXTURES = ["particle1.png", "particle2.png", "tile1.png"];
+const TEXTURES = [
+  "/images/particle1.png",
+  "/images/particle2.png",
+  "/images/tile1.png"
+] as const;
 
 export function BenchmarkDemoPage({ title }: DemoPageProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const spritePulseRef = useRef<SpritePulse | null>(null);
+  const spriteSheetsRef = useRef<SpriteSheet[]>([]);
   const runIdRef = useRef(0);
 
   const [status, setStatus] = useState("Initializing...");
@@ -90,11 +100,12 @@ export function BenchmarkDemoPage({ title }: DemoPageProps) {
     }
 
     let isDisposed = false;
-    const spritePulse = new SpritePulse(canvas, [
+    const benchmarkBundle = SpriteSheetBundle.fromImageFiles("benchmark", [
       "/images/particle1.png",
       "/images/particle2.png",
       "/images/tile1.png"
     ]);
+    const spritePulse = new SpritePulse(canvas, [benchmarkBundle]);
     spritePulseRef.current = spritePulse;
 
     void spritePulse
@@ -103,6 +114,9 @@ export function BenchmarkDemoPage({ title }: DemoPageProps) {
         if (isDisposed) {
           return;
         }
+        spriteSheetsRef.current = TEXTURES.map((texture) =>
+          benchmarkBundle.createSingleFrameSpriteSheet(texture)
+        );
         setStatus("Ready. Click run benchmark.");
       })
       .catch((error: unknown) => {
@@ -129,6 +143,11 @@ export function BenchmarkDemoPage({ title }: DemoPageProps) {
       return;
     }
 
+    if (spriteSheetsRef.current.length === 0) {
+      setStatus("Sprite sheets are not ready yet.");
+      return;
+    }
+
     await spritePulse.waitUntilReady();
 
     setRunning(true);
@@ -148,7 +167,13 @@ export function BenchmarkDemoPage({ title }: DemoPageProps) {
       const scenario = SCENARIOS[i];
       setStatus(`Running ${i + 1}/${SCENARIOS.length}: ${scenario.name}`);
 
-      const result = await runScenario(spritePulse, scenario, runIdRef, runId);
+      const result = await runScenario(
+        spritePulse,
+        scenario,
+        spriteSheetsRef.current,
+        runIdRef,
+        runId
+      );
       if (!result) {
         setRunning(false);
         return;
@@ -213,6 +238,7 @@ export function BenchmarkDemoPage({ title }: DemoPageProps) {
 async function runScenario(
   spritePulse: SpritePulse,
   scenario: BenchmarkScenario,
+  spriteSheets: SpriteSheet[],
   runIdRef: { current: number },
   runId: number
 ): Promise<BenchmarkResult | null> {
@@ -220,7 +246,7 @@ async function runScenario(
 
   for (let i = 0; i < scenario.spriteCount; i++) {
     const layerIndex = i % scenario.layerCount;
-    const texture = TEXTURES[i % scenario.textureCount];
+    const texture = spriteSheets[i % scenario.textureCount];
     const sprite = new Sprite(
       Math.random() * (spritePulse.canvas.width - 20),
       Math.random() * (spritePulse.canvas.height - 20),

@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Sprite, SpritePulse } from "sprite-pulse";
+import {
+  Sprite,
+  SpritePulse,
+  SpriteSheet,
+  SpriteSheetBundle
+} from "sprite-pulse";
 
 type DemoPageProps = {
   title: string;
@@ -14,11 +19,11 @@ class VelocitySprite extends Sprite {
     y: number,
     width: number,
     height: number,
-    shaderRef: string,
+    shaderRefOrSpriteSheet: string | SpriteSheet,
     vx: number,
     vy: number
   ) {
-    super(x, y, width, height, shaderRef);
+    super(x, y, width, height, shaderRefOrSpriteSheet);
     this.vx = vx;
     this.vy = vy;
   }
@@ -49,10 +54,11 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
     let uiUpdateFrameCount = 0;
     let sprites: VelocitySprite[] = [];
 
-    const spritePulse = new SpritePulse(canvas, [
+    const particleBundle = SpriteSheetBundle.fromImageFiles("particles", [
       "/images/particle1.png",
       "/images/particle2.png"
     ]);
+    const spritePulse = new SpritePulse(canvas, [particleBundle]);
     spritePulseRef.current = spritePulse;
 
     void spritePulse
@@ -64,6 +70,10 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
 
         const keys = Array.from(spritePulse.shaderCache.keys());
         setCachedKeys(keys);
+        const particleSheets = [
+          particleBundle.createSingleFrameSpriteSheet("/images/particle1.png"),
+          particleBundle.createSingleFrameSpriteSheet("/images/particle2.png")
+        ];
 
         const loop = () => {
           if (isDisposed) {
@@ -72,7 +82,8 @@ export function ParticlesDemoPage({ title }: DemoPageProps) {
 
           try {
             for (let i = 0; i < 40 * intensityRef.current; i++) {
-              const texture = Math.random() < 0.5 ? "particle1.png" : "particle2.png";
+              const texture =
+                Math.random() < 0.5 ? particleSheets[0] : particleSheets[1];
               const scale = 0.5 + Math.random();
               const vs = new VelocitySprite(
                 canvas.width / 2,

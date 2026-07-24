@@ -2,7 +2,7 @@ import { RenderTarget } from "../renderer/types";
 
 export function createTextureFromImage(
   gl: WebGL2RenderingContext,
-  image: HTMLImageElement
+  image: TexImageSource
 ): WebGLTexture {
   const texture = gl.createTexture();
   if (!texture) {

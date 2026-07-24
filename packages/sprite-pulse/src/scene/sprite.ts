@@ -44,4 +44,8 @@ export class Sprite extends Rect {
   public get currentAnimationRect(): Rect | null {
     return this.spriteSheet?.getCurrentAnimationRect(this.animationState) ?? null;
   }
+
+  public advanceAnimationFrame(): void {
+    this.spriteSheet?.advanceAnimationFrame(this.animationState);
+  }
 }

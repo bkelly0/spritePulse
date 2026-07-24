@@ -37,8 +37,11 @@ export class SpriteSheet {
 
   public getCurrentAnimationRect(state: AnimationFrameState): Rect {
     const animation = this.animations[this.animationIndex];
-    const rect = this.bounds[animation.getCurrentFrameSpriteSheetIndex(state)];
+    return this.bounds[animation.getCurrentFrameSpriteSheetIndex(state)];
+  }
+
+  public advanceAnimationFrame(state: AnimationFrameState): void {
+    const animation = this.animations[this.animationIndex];
     animation.nextFrame(state);
-    return rect;
   }
 }

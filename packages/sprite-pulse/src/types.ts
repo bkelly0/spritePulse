@@ -1,6 +1,6 @@
 export type SpriteShaderCacheEntry = {
   filename: string;
-  image: HTMLImageElement;
+  image: TexImageSource;
   texture: WebGLTexture;
   width: number;
   height: number;

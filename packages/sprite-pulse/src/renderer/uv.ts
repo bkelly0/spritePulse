@@ -13,8 +13,9 @@ export function resolveSpriteUvRect(
     return applySpriteFlip(new Rect(0, 0, 1, 1), sprite);
   }
 
+  sprite.advanceAnimationFrame();
+
   const normalizedX = clamp(animationRect.x / safeTextureWidth, 0, 1);
-  const normalizedY = clamp(animationRect.y / safeTextureHeight, 0, 1);
   const normalizedWidth = clamp(
     animationRect.width / safeTextureWidth,
     0,
@@ -23,7 +24,12 @@ export function resolveSpriteUvRect(
   const normalizedHeight = clamp(
     animationRect.height / safeTextureHeight,
     0,
-    1 - normalizedY
+    1
+  );
+  const normalizedY = clamp(
+    1 - (animationRect.y + animationRect.height) / safeTextureHeight,
+    0,
+    1 - normalizedHeight
   );
 
   return applySpriteFlip(new Rect(
